@@ -1,0 +1,42 @@
+[package]
+name = "cpm"
+version = "0.4.0"
+edition = "2021"
+license = "MIT"
+authors = ["JetCrab Team <team@jetcrab.dev>"]
+description = "Crab Package Manager - A simple wrapper for npm and cargo"
+repository = "https://github.com/JetCrabCollab/cpm"
+homepage = "https://jetcrab.dev/cpm"
+documentation = "https://docs.jetcrab.dev/cpm"
+readme = "README.md"
+keywords = ["package-manager", "javascript", "rust", "cargo", "npm", "wrapper"]
+categories = ["development-tools", "command-line-utilities", "package-managers"]
+
+[[bin]]
+name = "cpm"
+path = "src/bin/cpm.rs"
+
+[dependencies]
+# Core dependencies
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+
+# CLI dependencies
+clap = { version = "4.0", features = ["derive", "color"] }
+anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# WebAssembly support (for add-rust command)
+wasm-bindgen = "0.2"
+serde-wasm-bindgen = "0.6"
+web-sys = "0.3"
+
+# CLI Framework dependencies
+ctrlc = "3.4"
+
+[dev-dependencies]
+# Testing dependencies
+tempfile = "3.0"

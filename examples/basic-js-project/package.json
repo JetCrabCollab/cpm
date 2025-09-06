@@ -1,0 +1,20 @@
+{
+  "name": "basic-js-project",
+  "version": "1.0.0",
+  "description": "A basic JavaScript project managed by CPM",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "cpm dev",
+    "build": "cpm build"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "keywords": ["javascript", "cpm"],
+  "author": "",
+  "license": "MIT"
+}

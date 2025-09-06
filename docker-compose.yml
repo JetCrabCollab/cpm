@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  cpm:
+    build: .
+    container_name: cpm-dev
+    volumes:
+      - .:/workspace
+      - cargo-cache:/usr/local/cargo/registry
+    working_dir: /workspace
+    command: ["--help"]
+    environment:
+      - CARGO_TERM_COLOR=always
+      - RUST_LOG=info
+
+  cpm-test:
+    build: .
+    container_name: cpm-test
+    volumes:
+      - .:/workspace
+      - cargo-cache:/usr/local/cargo/registry
+    working_dir: /workspace
+    command: ["cargo", "test"]
+    environment:
+      - CARGO_TERM_COLOR=always
+      - RUST_LOG=info
+
+  cpm-clippy:
+    build: .
+    container_name: cpm-clippy
+    volumes:
+      - .:/workspace
+      - cargo-cache:/usr/local/cargo/registry
+    working_dir: /workspace
+    command: ["cargo", "clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]
+    environment:
+      - CARGO_TERM_COLOR=always
+      - RUST_LOG=info
+
+volumes:
+  cargo-cache:

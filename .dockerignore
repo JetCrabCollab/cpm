@@ -1,0 +1,48 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+docs/
+*.md
+CHANGELOG.md
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+
+# Examples
+examples/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Packaging
+packaging/
+
+# Scripts
+scripts/
+
+# Target directory
+target/
+Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Makefile
+Makefile
+
+# Rust
+rustfmt.toml
