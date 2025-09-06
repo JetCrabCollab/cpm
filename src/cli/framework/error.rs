@@ -36,25 +36,25 @@ impl fmt::Display for CliError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             CliError::FileOperationError { operation, path, message } => {
-                write!(f, "File operation '{}' failed on '{}': {}", operation, path, message)
+                write!(f, "File operation '{operation}' failed on '{path}': {message}")
             }
             CliError::FileExists { path } => {
-                write!(f, "File already exists: {}", path)
+                write!(f, "File already exists: {path}")
             }
             CliError::ExecutionError { command, message } => {
-                write!(f, "Command '{}' failed: {}", command, message)
+                write!(f, "Command '{command}' failed: {message}")
             }
             CliError::InternalError { message } => {
-                write!(f, "Internal error: {}", message)
+                write!(f, "Internal error: {message}")
             }
             CliError::IoError(e) => {
-                write!(f, "IO error: {}", e)
+                write!(f, "IO error: {e}")
             }
             CliError::JsonError(e) => {
-                write!(f, "JSON error: {}", e)
+                write!(f, "JSON error: {e}")
             }
             CliError::TomlError(e) => {
-                write!(f, "TOML error: {}", e)
+                write!(f, "TOML error: {e}")
             }
         }
     }

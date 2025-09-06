@@ -88,7 +88,7 @@ impl CliCommand for InitCommand {
 
         info!("Initializing JavaScript project: {}", project_name);
 
-        println!("🚀 Initializing CPM JavaScript project: {}", project_name);
+        println!("🚀 Initializing CPM JavaScript project: {project_name}");
         println!();
 
         // Create project directory
@@ -131,8 +131,8 @@ impl CliCommand for InitCommand {
             let stderr = String::from_utf8_lossy(&npm_output.stderr);
             let stdout = String::from_utf8_lossy(&npm_output.stdout);
             return Err(CliError::ExecutionError {
-                command: format!("{} init", npm_cmd),
-                message: format!("stderr: {}\nstdout: {}", stderr, stdout),
+                command: format!("{npm_cmd} init"),
+                message: format!("stderr: {stderr}\nstdout: {stdout}"),
             });
         }
 
@@ -155,7 +155,7 @@ greet('World');
         std::fs::write("index.js", index_js)?;
 
         // Create README
-        let readme = format!(r#"# {} - CPM JavaScript Project
+        let readme = format!(r#"# {project_name} - CPM JavaScript Project
 
 This is a JavaScript project managed by CPM (Crab Package Manager).
 
@@ -193,7 +193,7 @@ cpm add-rust
 - `cpm test` - Run tests
 - `cpm add-rust` - Add Rust to the project
 - `cpm rust-status` - Check Rust status
-"#, project_name);
+"#);
 
         std::fs::write("README.md", readme)?;
 
@@ -239,7 +239,7 @@ impl AddRustCommand {
         
         // Write back to Cargo.toml
         let updated_content = toml::to_string_pretty(&cargo_toml).map_err(|e| CliError::InternalError {
-            message: format!("Failed to serialize Cargo.toml: {}", e),
+            message: format!("Failed to serialize Cargo.toml: {e}"),
         })?;
         std::fs::write("Cargo.toml", updated_content)?;
         
@@ -340,7 +340,7 @@ impl CliCommand for AddRustCommand {
     }
 
     fn execute(&self, _context: &mut CliContext, matches: &ArgMatches) -> CliResult<()> {
-        let yes = matches.get_flag("yes");
+        let _yes = matches.get_flag("yes");
 
         info!("Adding Rust to existing JavaScript project");
 
@@ -371,11 +371,7 @@ impl CliCommand for AddRustCommand {
             .replace('-', "_");
 
         // Run cargo init
-        let cargo_args = if yes {
-            vec!["init", "--name", &project_name, "--lib"]
-        } else {
-            vec!["init", "--name", &project_name, "--lib"]
-        };
+        let cargo_args = vec!["init", "--name", &project_name, "--lib"];
 
         let cargo_output = std::process::Command::new("cargo")
             .args(&cargo_args)
@@ -578,7 +574,7 @@ impl CliCommand for NpxCommand {
         let args: Vec<&String> = matches.get_many::<String>("args").unwrap_or_default().collect();
         
         if let Some(pkg) = package {
-            println!("🦀 CPM detected npx command for package: {}", pkg);
+            println!("🦀 CPM detected npx command for package: {pkg}");
             println!("📦 Executing with npx...");
             
             // Build the npx command
@@ -591,7 +587,7 @@ impl CliCommand for NpxCommand {
             
             if !status.success() {
                 return Err(CliError::ExecutionError {
-                    command: format!("npx {}", pkg),
+                    command: format!("npx {pkg}"),
                     message: "npx command failed".to_string(),
                 });
             }
@@ -692,7 +688,7 @@ impl CliCommand for BuildCommand {
             if std::process::Command::new("wasm-pack").arg("--version").output().is_ok() {
                 println!("🌐 Building WebAssembly...");
                 let wasm_output = std::process::Command::new("wasm-pack")
-                    .args(&["build", "--release", "--target", "web", "--out-dir", "pkg"])
+                    .args(["build", "--release", "--target", "web", "--out-dir", "pkg"])
                     .output()?;
                 
                 if !wasm_output.status.success() {
@@ -842,7 +838,7 @@ fn main() {
     }
 
     if let Err(e) = app.run() {
-        eprintln!("Error: {}", e);
+        eprintln!("Error: {e}");
         std::process::exit(1);
     }
 }

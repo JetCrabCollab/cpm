@@ -23,20 +23,12 @@ pub fn setup_signal_handlers() -> Result<(), Box<dyn std::error::Error>> {
 pub type CliResult<T> = Result<T, CliError>;
 
 /// CLI context for command execution
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct CliContext {
     pub verbose: bool,
     pub quiet: bool,
 }
 
-impl Default for CliContext {
-    fn default() -> Self {
-        Self {
-            verbose: false,
-            quiet: false,
-        }
-    }
-}
 
 /// Trait for CLI commands
 pub trait CliCommand: Send + Sync {

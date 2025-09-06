@@ -57,13 +57,13 @@ pub fn show_walking_crab() {
 
     for _ in 0..3 {
         for frame in CRAB_FRAMES {
-            print!("\r{}", frame);
+            print!("\r{frame}");
             io::stdout().flush().unwrap();
             thread::sleep(Duration::from_millis(200));
         }
 
         for frame in CRAB_FRAMES.iter().rev() {
-            print!("\r{}", frame);
+            print!("\r{frame}");
             io::stdout().flush().unwrap();
             thread::sleep(Duration::from_millis(200));
         }
@@ -85,13 +85,13 @@ pub fn show_walking_jetcrab() {
 
     for _ in 0..2 {
         for frame in JETCRAB_FRAMES {
-            print!("\r{}", frame);
+            print!("\r{frame}");
             io::stdout().flush().unwrap();
             thread::sleep(Duration::from_millis(150));
         }
 
         for frame in JETCRAB_FRAMES.iter().rev() {
-            print!("\r{}", frame);
+            print!("\r{frame}");
             io::stdout().flush().unwrap();
             thread::sleep(Duration::from_millis(150));
         }
@@ -113,13 +113,13 @@ pub fn show_walking_claw() {
 
     for _ in 0..2 {
         for frame in CLAW_FRAMES {
-            print!("\r{}", frame);
+            print!("\r{frame}");
             io::stdout().flush().unwrap();
             thread::sleep(Duration::from_millis(150));
         }
 
         for frame in CLAW_FRAMES.iter().rev() {
-            print!("\r{}", frame);
+            print!("\r{frame}");
             io::stdout().flush().unwrap();
             thread::sleep(Duration::from_millis(150));
         }
@@ -201,7 +201,8 @@ mod tests {
 
     #[test]
     fn test_should_trigger_easter_egg_randomness() {
-        let result = should_trigger_easter_egg();
-        assert!(result == true || result == false);
+        // This test just ensures the function doesn't panic
+        // The result can be either true or false
+        let _result = should_trigger_easter_egg();
     }
 }
