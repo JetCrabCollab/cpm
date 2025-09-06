@@ -50,7 +50,7 @@ const CLAW_FRAMES: &[&str] = &[
 
 /// Display a walking crab animation
 pub fn show_walking_crab() {
-    println!("\n🦀 JetCrab Easter Egg! 🦀\n");
+    eprintln!("\n🦀 JetCrab Easter Egg! 🦀\n");
 
     print!("\x1B[2J\x1B[1;1H\x1B[?25l");
     io::stdout().flush().unwrap();
@@ -78,7 +78,7 @@ pub fn show_walking_crab() {
 
 /// Display a walking JetCrab logo animation
 pub fn show_walking_jetcrab() {
-    println!("\n🦀 JetCrab Easter Egg! 🦀\n");
+    eprintln!("\n🦀 JetCrab Easter Egg! 🦀\n");
 
     print!("\x1B[2J\x1B[1;1H\x1B[?25l");
     io::stdout().flush().unwrap();
@@ -106,7 +106,7 @@ pub fn show_walking_jetcrab() {
 
 /// Display a walking Claw logo animation
 pub fn show_walking_claw() {
-    println!("\n🦀 Claw Easter Egg! 🦀\n");
+    eprintln!("\n🦀 Claw Easter Egg! 🦀\n");
 
     print!("\x1B[2J\x1B[1;1H\x1B[?25l");
     io::stdout().flush().unwrap();

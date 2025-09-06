@@ -91,7 +91,7 @@ impl CliApp {
         }
 
         // If no subcommand, show help
-        println!("Use --help to see available commands");
+        eprintln!("Use --help to see available commands");
         Ok(())
     }
 }

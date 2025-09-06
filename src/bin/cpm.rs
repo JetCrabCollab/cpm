@@ -100,8 +100,8 @@ impl CliCommand for InitCommand {
 
         info!("Initializing JavaScript project: {}", project_name);
 
-        println!("🚀 Initializing CPM JavaScript project: {project_name}");
-        println!();
+        eprintln!("🚀 Initializing CPM JavaScript project: {project_name}");
+        eprintln!();
 
         // Create project directory
         let project_dir = PathBuf::from(project_name);
@@ -114,7 +114,7 @@ impl CliCommand for InitCommand {
         std::fs::create_dir(&project_dir)?;
         std::env::set_current_dir(&project_dir)?;
 
-        println!("📦 Setting up JavaScript project...");
+        eprintln!("📦 Setting up JavaScript project...");
 
         // Run npm init
         let npm_args = if yes {
@@ -215,10 +215,10 @@ cpm add-rust
 
         std::fs::write("README.md", readme)?;
 
-        println!("✅ JavaScript project initialized successfully!");
-        println!("💡 Run 'cpm install' to install dependencies");
-        println!("💡 Run 'cpm dev' to start development server");
-        println!("💡 Run 'cpm add-rust' to add Rust later if needed");
+        eprintln!("✅ JavaScript project initialized successfully!");
+        eprintln!("💡 Run 'cpm install' to install dependencies");
+        eprintln!("💡 Run 'cpm dev' to start development server");
+        eprintln!("💡 Run 'cpm add-rust' to add Rust later if needed");
 
         Ok(())
     }
@@ -285,7 +285,7 @@ impl AddRustCommand {
 // Import console.log from web-sys
 use web_sys::console;
 
-// A macro to provide `println!(..)`-style syntax for `console.log` logging.
+// A macro to provide `eprintln!(..)`-style syntax for `console.log` logging.
 macro_rules! log {
     ( $( $t:tt )* ) => {
         console::log_1(&format!( $( $t )* ).into());
@@ -297,6 +297,7 @@ extern "C" {
     fn alert(s: &str);
 }
 
+/// Greet a user with a message from Rust
 #[wasm_bindgen]
 pub fn greet(name: &str) {
     alert(&format!("Hello, {}! You've been greeted from Rust!", name));
@@ -390,12 +391,12 @@ impl CliCommand for AddRustCommand {
 
         // Check if Rust is already added
         if std::path::Path::new("Cargo.toml").exists() {
-            println!("⚠️  Rust is already added to this project!");
-            println!("💡 Run 'cpm rust-status' to check the current status");
+            eprintln!("⚠️  Rust is already added to this project!");
+            eprintln!("💡 Run 'cpm rust-status' to check the current status");
             return Ok(());
         }
 
-        println!("🦀 Adding Rust to JavaScript project...");
+        eprintln!("🦀 Adding Rust to JavaScript project...");
 
         // Get project name from package.json
         let package_json_content = std::fs::read_to_string("package.json")?;
@@ -425,10 +426,10 @@ impl CliCommand for AddRustCommand {
         // Create Rust files
         self.create_rust_files(&project_name)?;
 
-        println!("✅ Rust added to project successfully!");
-        println!("💡 Run 'cpm build' to compile Rust to WASM");
-        println!("💡 Run 'cpm dev' to start development server");
-        println!("💡 Check 'src/lib.rs' for Rust code examples");
+        eprintln!("✅ Rust added to project successfully!");
+        eprintln!("💡 Run 'cpm build' to compile Rust to WASM");
+        eprintln!("💡 Run 'cpm dev' to start development server");
+        eprintln!("💡 Check 'src/lib.rs' for Rust code examples");
 
         Ok(())
     }
@@ -464,29 +465,29 @@ impl CliCommand for RemoveRustCommand {
 
         // Check if Rust is present
         if !std::path::Path::new("Cargo.toml").exists() {
-            println!("⚠️  No Rust found in this project!");
+            eprintln!("⚠️  No Rust found in this project!");
             return Ok(());
         }
 
         if !yes {
-            println!("⚠️  This will remove all Rust files and dependencies!");
-            println!("   - Cargo.toml");
-            println!("   - src/ directory");
-            println!("   - pkg/ directory");
-            println!("   - Rust dependencies from package.json");
-            println!();
-            println!("   Continue? (y/N): ");
+            eprintln!("⚠️  This will remove all Rust files and dependencies!");
+            eprintln!("   - Cargo.toml");
+            eprintln!("   - src/ directory");
+            eprintln!("   - pkg/ directory");
+            eprintln!("   - Rust dependencies from package.json");
+            eprintln!();
+            eprintln!("   Continue? (y/N): ");
 
             let mut input = String::new();
             std::io::stdin().read_line(&mut input)?;
 
             if !input.trim().to_lowercase().starts_with('y') {
-                println!("❌ Operation cancelled");
+                eprintln!("❌ Operation cancelled");
                 return Ok(());
             }
         }
 
-        println!("🗑️  Removing Rust from project...");
+        eprintln!("🗑️  Removing Rust from project...");
 
         // Remove Rust files
         if std::path::Path::new("Cargo.toml").exists() {
@@ -515,8 +516,8 @@ impl CliCommand for RemoveRustCommand {
         let updated_content = serde_json::to_string_pretty(&package_json)?;
         std::fs::write("package.json", updated_content)?;
 
-        println!("✅ Rust removed from project successfully!");
-        println!("💡 Project is now JavaScript-only");
+        eprintln!("✅ Rust removed from project successfully!");
+        eprintln!("💡 Project is now JavaScript-only");
 
         Ok(())
     }
@@ -534,13 +535,13 @@ impl CliCommand for RustStatusCommand {
     fn execute(&self, _context: &mut CliContext, _matches: &ArgMatches) -> CliResult<()> {
         info!("Checking Rust status");
 
-        println!("🔍 Checking Rust status in current project...");
-        println!();
+        eprintln!("🔍 Checking Rust status in current project...");
+        eprintln!();
 
         // Check if we're in a JavaScript project
         if !std::path::Path::new("package.json").exists() {
-            println!("❌ Not in a JavaScript project");
-            println!("💡 Run 'cpm init' to create a new project");
+            eprintln!("❌ Not in a JavaScript project");
+            eprintln!("💡 Run 'cpm init' to create a new project");
             return Ok(());
         }
 
@@ -550,35 +551,35 @@ impl CliCommand for RustStatusCommand {
         let has_pkg_dir = std::path::Path::new("pkg").exists();
         let has_lib_rs = std::path::Path::new("src/lib.rs").exists();
 
-        println!("📁 Project Structure:");
-        println!("   package.json: ✅");
-        println!(
+        eprintln!("📁 Project Structure:");
+        eprintln!("   package.json: ✅");
+        eprintln!(
             "   Cargo.toml: {}",
             if has_cargo_toml { "✅" } else { "❌" }
         );
-        println!(
+        eprintln!(
             "   src/ directory: {}",
             if has_src_dir { "✅" } else { "❌" }
         );
-        println!("   src/lib.rs: {}", if has_lib_rs { "✅" } else { "❌" });
-        println!(
+        eprintln!("   src/lib.rs: {}", if has_lib_rs { "✅" } else { "❌" });
+        eprintln!(
             "   pkg/ directory: {}",
             if has_pkg_dir { "✅" } else { "❌" }
         );
 
         if has_cargo_toml && has_src_dir && has_lib_rs {
-            println!();
-            println!("🦀 Rust is fully integrated!");
-            println!("💡 Run 'cpm build' to compile Rust to WASM");
-            println!("💡 Run 'cpm dev' to start development server");
+            eprintln!();
+            eprintln!("🦀 Rust is fully integrated!");
+            eprintln!("💡 Run 'cpm build' to compile Rust to WASM");
+            eprintln!("💡 Run 'cpm dev' to start development server");
         } else if has_cargo_toml || has_src_dir {
-            println!();
-            println!("⚠️  Rust is partially integrated");
-            println!("💡 Run 'cpm add-rust' to complete the setup");
+            eprintln!();
+            eprintln!("⚠️  Rust is partially integrated");
+            eprintln!("💡 Run 'cpm add-rust' to complete the setup");
         } else {
-            println!();
-            println!("📦 JavaScript-only project");
-            println!("💡 Run 'cpm add-rust' to add Rust if needed");
+            eprintln!();
+            eprintln!("📦 JavaScript-only project");
+            eprintln!("💡 Run 'cpm add-rust' to add Rust if needed");
         }
 
         Ok(())
@@ -620,8 +621,8 @@ impl CliCommand for NpxCommand {
             .collect();
 
         if let Some(pkg) = package {
-            println!("🦀 CPM detected npx command for package: {pkg}");
-            println!("📦 Executing with npx...");
+            eprintln!("🦀 CPM detected npx command for package: {pkg}");
+            eprintln!("📦 Executing with npx...");
 
             // Build the npx command
             let mut npx_cmd = std::process::Command::new("npx");
@@ -638,8 +639,8 @@ impl CliCommand for NpxCommand {
                 });
             }
         } else {
-            println!("❌ No package specified for npx");
-            println!("💡 Usage: cpm npx <package> [args...]");
+            eprintln!("❌ No package specified for npx");
+            eprintln!("💡 Usage: cpm npx <package> [args...]");
         }
 
         Ok(())
@@ -656,11 +657,11 @@ impl CliCommand for InstallCommand {
     }
 
     fn execute(&self, _context: &mut CliContext, _matches: &ArgMatches) -> CliResult<()> {
-        println!("📦 Installing dependencies...");
+        eprintln!("📦 Installing dependencies...");
 
         // Check if we're in a JavaScript project
         if std::path::Path::new("package.json").exists() {
-            println!("🟨 Installing JavaScript dependencies with npm...");
+            eprintln!("🟨 Installing JavaScript dependencies with npm...");
 
             // Try npm.cmd on Windows first, then npm
             let npm_cmd = if cfg!(target_os = "windows") {
@@ -679,12 +680,12 @@ impl CliCommand for InstallCommand {
                     message: String::from_utf8_lossy(&npm_output.stderr).to_string(),
                 });
             }
-            println!("✅ JavaScript dependencies installed!");
+            eprintln!("✅ JavaScript dependencies installed!");
         }
 
         // Check if we're in a Rust project
         if std::path::Path::new("Cargo.toml").exists() {
-            println!("🦀 Installing Rust dependencies with cargo...");
+            eprintln!("🦀 Installing Rust dependencies with cargo...");
             let cargo_output = std::process::Command::new("cargo").arg("build").output()?;
 
             if !cargo_output.status.success() {
@@ -693,7 +694,7 @@ impl CliCommand for InstallCommand {
                     message: String::from_utf8_lossy(&cargo_output.stderr).to_string(),
                 });
             }
-            println!("✅ Rust dependencies installed!");
+            eprintln!("✅ Rust dependencies installed!");
         }
 
         Ok(())
@@ -710,11 +711,11 @@ impl CliCommand for BuildCommand {
     }
 
     fn execute(&self, _context: &mut CliContext, _matches: &ArgMatches) -> CliResult<()> {
-        println!("🔨 Building project...");
+        eprintln!("🔨 Building project...");
 
         // Check if we're in a Rust project
         if std::path::Path::new("Cargo.toml").exists() {
-            println!("🦀 Building Rust project...");
+            eprintln!("🦀 Building Rust project...");
             let cargo_output = std::process::Command::new("cargo").arg("build").output()?;
 
             if !cargo_output.status.success() {
@@ -730,21 +731,21 @@ impl CliCommand for BuildCommand {
                 .output()
                 .is_ok()
             {
-                println!("🌐 Building WebAssembly...");
+                eprintln!("🌐 Building WebAssembly...");
                 let wasm_output = std::process::Command::new("wasm-pack")
                     .args(["build", "--release", "--target", "web", "--out-dir", "pkg"])
                     .output()?;
 
                 if !wasm_output.status.success() {
-                    println!("⚠️  WASM build failed, but continuing...");
+                    eprintln!("⚠️  WASM build failed, but continuing...");
                 } else {
-                    println!("✅ WebAssembly built successfully!");
+                    eprintln!("✅ WebAssembly built successfully!");
                 }
             }
 
-            println!("✅ Rust project built!");
+            eprintln!("✅ Rust project built!");
         } else {
-            println!("📦 No build step needed for JavaScript-only project");
+            eprintln!("📦 No build step needed for JavaScript-only project");
         }
 
         Ok(())
@@ -761,7 +762,7 @@ impl CliCommand for DevCommand {
     }
 
     fn execute(&self, _context: &mut CliContext, _matches: &ArgMatches) -> CliResult<()> {
-        println!("🚀 Starting development server...");
+        eprintln!("🚀 Starting development server...");
 
         // Check for JavaScript entry point
         let js_entry = if std::path::Path::new("js/index.js").exists() {
@@ -769,8 +770,8 @@ impl CliCommand for DevCommand {
         } else if std::path::Path::new("index.js").exists() {
             "index.js"
         } else {
-            println!("❌ Error: No JavaScript entry point found");
-            println!("💡 Tip: Run 'cpm init' to create a new project or ensure index.js exists");
+            eprintln!("❌ Error: No JavaScript entry point found");
+            eprintln!("💡 Tip: Run 'cpm init' to create a new project or ensure index.js exists");
             return Err(CliError::FileOperationError {
                 operation: "read JavaScript entry point".to_string(),
                 path: "index.js".to_string(),
@@ -778,7 +779,7 @@ impl CliCommand for DevCommand {
             });
         };
 
-        println!("🔍 Looking for JavaScript runtime...");
+        eprintln!("🔍 Looking for JavaScript runtime...");
 
         // Try JetCrab first, then fallback to Node.js
         let jetcrab_available = std::process::Command::new("jetcrab")
@@ -787,7 +788,7 @@ impl CliCommand for DevCommand {
             .is_ok();
 
         if jetcrab_available {
-            println!("🦀 Using JetCrab runtime...");
+            eprintln!("🦀 Using JetCrab runtime...");
             let mut child = std::process::Command::new("jetcrab")
                 .arg("run")
                 .arg(js_entry)
@@ -795,7 +796,7 @@ impl CliCommand for DevCommand {
 
             child.wait()?;
         } else {
-            println!("🟨 Using Node.js runtime...");
+            eprintln!("🟨 Using Node.js runtime...");
             let mut child = std::process::Command::new("node").arg(js_entry).spawn()?;
 
             child.wait()?;
@@ -815,11 +816,11 @@ impl CliCommand for TestCommand {
     }
 
     fn execute(&self, _context: &mut CliContext, _matches: &ArgMatches) -> CliResult<()> {
-        println!("🧪 Running tests...");
+        eprintln!("🧪 Running tests...");
 
         // Check if we're in a JavaScript project
         if std::path::Path::new("package.json").exists() {
-            println!("🟨 Running JavaScript tests...");
+            eprintln!("🟨 Running JavaScript tests...");
 
             // Try npm.cmd on Windows first, then npm
             let npm_cmd = if cfg!(target_os = "windows") {
@@ -831,16 +832,16 @@ impl CliCommand for TestCommand {
             let npm_output = std::process::Command::new(npm_cmd).arg("test").output()?;
 
             if !npm_output.status.success() {
-                println!("⚠️  No test script found in package.json");
-                println!("💡 Add a test script to package.json or run tests manually");
+                eprintln!("⚠️  No test script found in package.json");
+                eprintln!("💡 Add a test script to package.json or run tests manually");
             } else {
-                println!("✅ JavaScript tests completed!");
+                eprintln!("✅ JavaScript tests completed!");
             }
         }
 
         // Check if we're in a Rust project
         if std::path::Path::new("Cargo.toml").exists() {
-            println!("🦀 Running Rust tests...");
+            eprintln!("🦀 Running Rust tests...");
             let cargo_output = std::process::Command::new("cargo").arg("test").output()?;
 
             if !cargo_output.status.success() {
@@ -849,7 +850,7 @@ impl CliCommand for TestCommand {
                     message: String::from_utf8_lossy(&cargo_output.stderr).to_string(),
                 });
             }
-            println!("✅ Rust tests completed!");
+            eprintln!("✅ Rust tests completed!");
         }
 
         Ok(())
