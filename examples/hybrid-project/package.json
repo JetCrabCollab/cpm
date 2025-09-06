@@ -1,0 +1,21 @@
+{
+  "name": "hybrid-project",
+  "version": "1.0.0",
+  "description": "A hybrid JavaScript + Rust project managed by CPM",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "cpm dev",
+    "build": "cpm build",
+    "test": "cpm test"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "keywords": ["javascript", "rust", "wasm", "cpm"],
+  "author": "",
+  "license": "MIT"
+}

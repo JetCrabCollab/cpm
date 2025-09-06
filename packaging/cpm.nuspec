@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>cpm</id>
+    <version>0.4.0</version>
+    <title>CPM - Crab Package Manager</title>
+    <authors>JetCrab Team</authors>
+    <owners>JetCrab Team</owners>
+    <licenseUrl>https://github.com/JetCrabCollab/cpm/blob/main/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/JetCrabCollab/cpm</projectUrl>
+    <iconUrl>https://github.com/JetCrabCollab/cpm/raw/main/assets/icon.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Crab Package Manager - A modern package manager for JavaScript and Rust</description>
+    <summary>CPM is a unified package manager that combines JavaScript and Rust package management</summary>
+    <tags>package-manager javascript rust wasm cargo npm</tags>
+    <releaseNotes>https://github.com/JetCrabCollab/cpm/releases</releaseNotes>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
