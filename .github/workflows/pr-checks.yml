@@ -55,7 +55,7 @@ jobs:
 
     - name: Check for debug prints
       run: |
-        if grep -r "println!\|dbg!" src/ --include="*.rs"; then
+        if grep -r "\bprintln!\|\bdbg!" src/ --include="*.rs"; then
           echo "Found debug prints. Please remove them before merging."
           exit 1
         fi
