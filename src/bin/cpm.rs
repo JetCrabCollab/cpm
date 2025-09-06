@@ -303,12 +303,14 @@ pub fn greet(name: &str) {
     alert(&format!("Hello, {}! You've been greeted from Rust!", name));
 }
 
+/// Add two numbers and return the result
 #[wasm_bindgen]
 pub fn add(a: i32, b: i32) -> i32 {
     log!("Adding {} + {}", a, b);
     a + b
 }
 
+/// Calculate the nth Fibonacci number
 #[wasm_bindgen]
 pub fn fibonacci(n: i32) -> i32 {
     if n <= 1 {
@@ -318,6 +320,7 @@ pub fn fibonacci(n: i32) -> i32 {
     }
 }
 
+/// Get the current Rust version
 #[wasm_bindgen]
 pub fn get_rust_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
