@@ -12,18 +12,11 @@ pub enum CliError {
         message: String,
     },
     /// File already exists
-    FileExists {
-        path: String,
-    },
+    FileExists { path: String },
     /// Execution error
-    ExecutionError {
-        command: String,
-        message: String,
-    },
+    ExecutionError { command: String, message: String },
     /// Internal error
-    InternalError {
-        message: String,
-    },
+    InternalError { message: String },
     /// IO error
     IoError(std::io::Error),
     /// JSON error
@@ -35,8 +28,15 @@ pub enum CliError {
 impl fmt::Display for CliError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            CliError::FileOperationError { operation, path, message } => {
-                write!(f, "File operation '{operation}' failed on '{path}': {message}")
+            CliError::FileOperationError {
+                operation,
+                path,
+                message,
+            } => {
+                write!(
+                    f,
+                    "File operation '{operation}' failed on '{path}': {message}"
+                )
             }
             CliError::FileExists { path } => {
                 write!(f, "File already exists: {path}")

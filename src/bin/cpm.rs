@@ -1,9 +1,7 @@
 //! Crab Package Manager - A modern package manager for JavaScript and Rust
 
 use clap::ArgMatches;
-use cpm::cli::framework::{
-    CliApp, CliCommand, CliContext, CliError, CliResult,
-};
+use cpm::cli::framework::{CliApp, CliCommand, CliContext, CliError, CliResult};
 use cpm::easter_egg::{should_trigger_easter_egg, show_walking_claw};
 use std::path::PathBuf;
 use tracing::info;
@@ -32,26 +30,44 @@ impl InitCommand {
         // Read existing package.json
         let package_json_content = std::fs::read_to_string("package.json")?;
         let mut package_json: serde_json::Value = serde_json::from_str(&package_json_content)?;
-        
+
         // Add CPM scripts
         if let Some(scripts) = package_json.get_mut("scripts") {
             if let Some(scripts_obj) = scripts.as_object_mut() {
-                scripts_obj.insert("dev".to_string(), serde_json::Value::String("cpm dev".to_string()));
-                scripts_obj.insert("build".to_string(), serde_json::Value::String("cpm build".to_string()));
-                scripts_obj.insert("test".to_string(), serde_json::Value::String("cpm test".to_string()));
+                scripts_obj.insert(
+                    "dev".to_string(),
+                    serde_json::Value::String("cpm dev".to_string()),
+                );
+                scripts_obj.insert(
+                    "build".to_string(),
+                    serde_json::Value::String("cpm build".to_string()),
+                );
+                scripts_obj.insert(
+                    "test".to_string(),
+                    serde_json::Value::String("cpm test".to_string()),
+                );
             }
         } else {
             let mut scripts = serde_json::Map::new();
-            scripts.insert("dev".to_string(), serde_json::Value::String("cpm dev".to_string()));
-            scripts.insert("build".to_string(), serde_json::Value::String("cpm build".to_string()));
-            scripts.insert("test".to_string(), serde_json::Value::String("cpm test".to_string()));
+            scripts.insert(
+                "dev".to_string(),
+                serde_json::Value::String("cpm dev".to_string()),
+            );
+            scripts.insert(
+                "build".to_string(),
+                serde_json::Value::String("cpm build".to_string()),
+            );
+            scripts.insert(
+                "test".to_string(),
+                serde_json::Value::String("cpm test".to_string()),
+            );
             package_json["scripts"] = serde_json::Value::Object(scripts);
         }
-        
+
         // Write back to package.json
         let updated_content = serde_json::to_string_pretty(&package_json)?;
         std::fs::write("package.json", updated_content)?;
-        
+
         Ok(())
     }
 }
@@ -69,13 +85,9 @@ impl CliCommand for InitCommand {
                     .short('y')
                     .long("yes")
                     .help("Use default values without prompting")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(clap::ArgAction::SetTrue),
             )
-            .arg(
-                clap::Arg::new("name")
-                    .help("Project name")
-                    .index(1)
-            )
+            .arg(clap::Arg::new("name").help("Project name").index(1))
     }
 
     fn execute(&self, _context: &mut CliContext, matches: &ArgMatches) -> CliResult<()> {
@@ -114,7 +126,11 @@ impl CliCommand for InitCommand {
         // Try to find npm in common locations
         let npm_cmd = if cfg!(windows) {
             // On Windows, try npm.cmd first, then npm
-            if std::process::Command::new("npm.cmd").arg("--version").output().is_ok() {
+            if std::process::Command::new("npm.cmd")
+                .arg("--version")
+                .output()
+                .is_ok()
+            {
                 "npm.cmd"
             } else {
                 "npm"
@@ -155,7 +171,8 @@ greet('World');
         std::fs::write("index.js", index_js)?;
 
         // Create README
-        let readme = format!(r#"# {project_name} - CPM JavaScript Project
+        let readme = format!(
+            r#"# {project_name} - CPM JavaScript Project
 
 This is a JavaScript project managed by CPM (Crab Package Manager).
 
@@ -193,7 +210,8 @@ cpm add-rust
 - `cpm test` - Run tests
 - `cpm add-rust` - Add Rust to the project
 - `cpm rust-status` - Check Rust status
-"#);
+"#
+        );
 
         std::fs::write("README.md", readme)?;
 
@@ -215,41 +233,52 @@ impl AddRustCommand {
         // Read existing Cargo.toml
         let cargo_toml_content = std::fs::read_to_string("Cargo.toml")?;
         let mut cargo_toml: toml::Value = toml::from_str(&cargo_toml_content)?;
-        
+
         // Ensure [lib] section exists with cdylib
         if let Some(package) = cargo_toml.get_mut("package") {
             if let Some(_package_obj) = package.as_table_mut() {
                 // Add [lib] section
                 let mut lib_section = toml::map::Map::new();
-                lib_section.insert("crate-type".to_string(), toml::Value::Array(vec![
-                    toml::Value::String("cdylib".to_string())
-                ]));
+                lib_section.insert(
+                    "crate-type".to_string(),
+                    toml::Value::Array(vec![toml::Value::String("cdylib".to_string())]),
+                );
                 cargo_toml["lib"] = toml::Value::Table(lib_section);
             }
         }
-        
+
         // Add WASM dependencies
         let mut dependencies = toml::map::Map::new();
-        dependencies.insert("wasm-bindgen".to_string(), toml::Value::String("0.2".to_string()));
+        dependencies.insert(
+            "wasm-bindgen".to_string(),
+            toml::Value::String("0.2".to_string()),
+        );
         dependencies.insert("serde".to_string(), toml::Value::String("1.0".to_string()));
-        dependencies.insert("serde-wasm-bindgen".to_string(), toml::Value::String("0.6".to_string()));
-        dependencies.insert("web-sys".to_string(), toml::Value::String("0.3".to_string()));
-        
+        dependencies.insert(
+            "serde-wasm-bindgen".to_string(),
+            toml::Value::String("0.6".to_string()),
+        );
+        dependencies.insert(
+            "web-sys".to_string(),
+            toml::Value::String("0.3".to_string()),
+        );
+
         cargo_toml["dependencies"] = toml::Value::Table(dependencies);
-        
+
         // Write back to Cargo.toml
-        let updated_content = toml::to_string_pretty(&cargo_toml).map_err(|e| CliError::InternalError {
-            message: format!("Failed to serialize Cargo.toml: {e}"),
-        })?;
+        let updated_content =
+            toml::to_string_pretty(&cargo_toml).map_err(|e| CliError::InternalError {
+                message: format!("Failed to serialize Cargo.toml: {e}"),
+            })?;
         std::fs::write("Cargo.toml", updated_content)?;
-        
+
         Ok(())
     }
 
     fn create_rust_files(&self, _project_name: &str) -> CliResult<()> {
         // Create src directory if it doesn't exist
         std::fs::create_dir_all("src")?;
-        
+
         // Create lib.rs
         let lib_rs = r#"use wasm_bindgen::prelude::*;
 
@@ -293,31 +322,37 @@ pub fn get_rust_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 "#;
-        
+
         std::fs::write("src/lib.rs", lib_rs)?;
-        
+
         // Create pkg directory
         std::fs::create_dir_all("pkg")?;
-        
+
         // Update package.json to include WASM
         let package_json_content = std::fs::read_to_string("package.json")?;
         let mut package_json: serde_json::Value = serde_json::from_str(&package_json_content)?;
-        
+
         // Add WASM dependency
         if let Some(dependencies) = package_json.get_mut("dependencies") {
             if let Some(deps_obj) = dependencies.as_object_mut() {
-                deps_obj.insert("wasm-bindgen".to_string(), serde_json::Value::String("^0.2".to_string()));
+                deps_obj.insert(
+                    "wasm-bindgen".to_string(),
+                    serde_json::Value::String("^0.2".to_string()),
+                );
             }
         } else {
             let mut dependencies = serde_json::Map::new();
-            dependencies.insert("wasm-bindgen".to_string(), serde_json::Value::String("^0.2".to_string()));
+            dependencies.insert(
+                "wasm-bindgen".to_string(),
+                serde_json::Value::String("^0.2".to_string()),
+            );
             package_json["dependencies"] = serde_json::Value::Object(dependencies);
         }
-        
+
         // Write back to package.json
         let updated_content = serde_json::to_string_pretty(&package_json)?;
         std::fs::write("package.json", updated_content)?;
-        
+
         Ok(())
     }
 }
@@ -335,7 +370,7 @@ impl CliCommand for AddRustCommand {
                     .short('y')
                     .long("yes")
                     .help("Use default values without prompting")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(clap::ArgAction::SetTrue),
             )
     }
 
@@ -418,7 +453,7 @@ impl CliCommand for RemoveRustCommand {
                     .short('y')
                     .long("yes")
                     .help("Remove without prompting")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(clap::ArgAction::SetTrue),
             )
     }
 
@@ -441,10 +476,10 @@ impl CliCommand for RemoveRustCommand {
             println!("   - Rust dependencies from package.json");
             println!();
             println!("   Continue? (y/N): ");
-            
+
             let mut input = String::new();
             std::io::stdin().read_line(&mut input)?;
-            
+
             if !input.trim().to_lowercase().starts_with('y') {
                 println!("❌ Operation cancelled");
                 return Ok(());
@@ -469,13 +504,13 @@ impl CliCommand for RemoveRustCommand {
         // Remove WASM dependencies from package.json
         let package_json_content = std::fs::read_to_string("package.json")?;
         let mut package_json: serde_json::Value = serde_json::from_str(&package_json_content)?;
-        
+
         if let Some(dependencies) = package_json.get_mut("dependencies") {
             if let Some(deps_obj) = dependencies.as_object_mut() {
                 deps_obj.remove("wasm-bindgen");
             }
         }
-        
+
         // Write back to package.json
         let updated_content = serde_json::to_string_pretty(&package_json)?;
         std::fs::write("package.json", updated_content)?;
@@ -493,8 +528,7 @@ impl CliCommand for RustStatusCommand {
     }
 
     fn build_clap_command(&self) -> clap::Command {
-        clap::Command::new("rust-status")
-            .about("Check Rust status in the current project")
+        clap::Command::new("rust-status").about("Check Rust status in the current project")
     }
 
     fn execute(&self, _context: &mut CliContext, _matches: &ArgMatches) -> CliResult<()> {
@@ -518,10 +552,19 @@ impl CliCommand for RustStatusCommand {
 
         println!("📁 Project Structure:");
         println!("   package.json: ✅");
-        println!("   Cargo.toml: {}", if has_cargo_toml { "✅" } else { "❌" });
-        println!("   src/ directory: {}", if has_src_dir { "✅" } else { "❌" });
+        println!(
+            "   Cargo.toml: {}",
+            if has_cargo_toml { "✅" } else { "❌" }
+        );
+        println!(
+            "   src/ directory: {}",
+            if has_src_dir { "✅" } else { "❌" }
+        );
         println!("   src/lib.rs: {}", if has_lib_rs { "✅" } else { "❌" });
-        println!("   pkg/ directory: {}", if has_pkg_dir { "✅" } else { "❌" });
+        println!(
+            "   pkg/ directory: {}",
+            if has_pkg_dir { "✅" } else { "❌" }
+        );
 
         if has_cargo_toml && has_src_dir && has_lib_rs {
             println!();
@@ -559,32 +602,35 @@ impl CliCommand for NpxCommand {
             .arg(
                 clap::Arg::new("package")
                     .help("Package to execute")
-                    .index(1)
+                    .index(1),
             )
             .arg(
                 clap::Arg::new("args")
                     .help("Arguments to pass to the package")
                     .num_args(0..)
-                    .last(true)
+                    .last(true),
             )
     }
 
     fn execute(&self, _context: &mut CliContext, matches: &ArgMatches) -> CliResult<()> {
         let package = matches.get_one::<String>("package");
-        let args: Vec<&String> = matches.get_many::<String>("args").unwrap_or_default().collect();
-        
+        let args: Vec<&String> = matches
+            .get_many::<String>("args")
+            .unwrap_or_default()
+            .collect();
+
         if let Some(pkg) = package {
             println!("🦀 CPM detected npx command for package: {pkg}");
             println!("📦 Executing with npx...");
-            
+
             // Build the npx command
             let mut npx_cmd = std::process::Command::new("npx");
             npx_cmd.arg(pkg);
             npx_cmd.args(&args);
-            
+
             // Execute the command
             let status = npx_cmd.status()?;
-            
+
             if !status.success() {
                 return Err(CliError::ExecutionError {
                     command: format!("npx {pkg}"),
@@ -595,7 +641,7 @@ impl CliCommand for NpxCommand {
             println!("❌ No package specified for npx");
             println!("💡 Usage: cpm npx <package> [args...]");
         }
-        
+
         Ok(())
     }
 }
@@ -606,28 +652,27 @@ impl CliCommand for InstallCommand {
     }
 
     fn build_clap_command(&self) -> clap::Command {
-        clap::Command::new("install")
-            .about("Install dependencies")
+        clap::Command::new("install").about("Install dependencies")
     }
 
     fn execute(&self, _context: &mut CliContext, _matches: &ArgMatches) -> CliResult<()> {
         println!("📦 Installing dependencies...");
-        
+
         // Check if we're in a JavaScript project
         if std::path::Path::new("package.json").exists() {
             println!("🟨 Installing JavaScript dependencies with npm...");
-            
+
             // Try npm.cmd on Windows first, then npm
             let npm_cmd = if cfg!(target_os = "windows") {
                 "npm.cmd"
             } else {
                 "npm"
             };
-            
+
             let npm_output = std::process::Command::new(npm_cmd)
                 .arg("install")
                 .output()?;
-            
+
             if !npm_output.status.success() {
                 return Err(CliError::ExecutionError {
                     command: "npm install".to_string(),
@@ -636,14 +681,12 @@ impl CliCommand for InstallCommand {
             }
             println!("✅ JavaScript dependencies installed!");
         }
-        
+
         // Check if we're in a Rust project
         if std::path::Path::new("Cargo.toml").exists() {
             println!("🦀 Installing Rust dependencies with cargo...");
-            let cargo_output = std::process::Command::new("cargo")
-                .arg("build")
-                .output()?;
-            
+            let cargo_output = std::process::Command::new("cargo").arg("build").output()?;
+
             if !cargo_output.status.success() {
                 return Err(CliError::ExecutionError {
                     command: "cargo build".to_string(),
@@ -652,7 +695,7 @@ impl CliCommand for InstallCommand {
             }
             println!("✅ Rust dependencies installed!");
         }
-        
+
         Ok(())
     }
 }
@@ -663,46 +706,47 @@ impl CliCommand for BuildCommand {
     }
 
     fn build_clap_command(&self) -> clap::Command {
-        clap::Command::new("build")
-            .about("Build the project")
+        clap::Command::new("build").about("Build the project")
     }
 
     fn execute(&self, _context: &mut CliContext, _matches: &ArgMatches) -> CliResult<()> {
         println!("🔨 Building project...");
-        
+
         // Check if we're in a Rust project
         if std::path::Path::new("Cargo.toml").exists() {
             println!("🦀 Building Rust project...");
-            let cargo_output = std::process::Command::new("cargo")
-                .arg("build")
-                .output()?;
-            
+            let cargo_output = std::process::Command::new("cargo").arg("build").output()?;
+
             if !cargo_output.status.success() {
                 return Err(CliError::ExecutionError {
                     command: "cargo build".to_string(),
                     message: String::from_utf8_lossy(&cargo_output.stderr).to_string(),
                 });
             }
-            
+
             // If wasm-pack is available, build WASM
-            if std::process::Command::new("wasm-pack").arg("--version").output().is_ok() {
+            if std::process::Command::new("wasm-pack")
+                .arg("--version")
+                .output()
+                .is_ok()
+            {
                 println!("🌐 Building WebAssembly...");
                 let wasm_output = std::process::Command::new("wasm-pack")
                     .args(["build", "--release", "--target", "web", "--out-dir", "pkg"])
                     .output()?;
-                
+
                 if !wasm_output.status.success() {
                     println!("⚠️  WASM build failed, but continuing...");
                 } else {
                     println!("✅ WebAssembly built successfully!");
                 }
             }
-            
+
             println!("✅ Rust project built!");
         } else {
             println!("📦 No build step needed for JavaScript-only project");
         }
-        
+
         Ok(())
     }
 }
@@ -713,13 +757,12 @@ impl CliCommand for DevCommand {
     }
 
     fn build_clap_command(&self) -> clap::Command {
-        clap::Command::new("dev")
-            .about("Start development server")
+        clap::Command::new("dev").about("Start development server")
     }
 
     fn execute(&self, _context: &mut CliContext, _matches: &ArgMatches) -> CliResult<()> {
         println!("🚀 Starting development server...");
-        
+
         // Check for JavaScript entry point
         let js_entry = if std::path::Path::new("js/index.js").exists() {
             "js/index.js"
@@ -734,32 +777,30 @@ impl CliCommand for DevCommand {
                 message: "File not found".to_string(),
             });
         };
-        
+
         println!("🔍 Looking for JavaScript runtime...");
-        
+
         // Try JetCrab first, then fallback to Node.js
         let jetcrab_available = std::process::Command::new("jetcrab")
             .arg("--version")
             .output()
             .is_ok();
-        
+
         if jetcrab_available {
             println!("🦀 Using JetCrab runtime...");
             let mut child = std::process::Command::new("jetcrab")
                 .arg("run")
                 .arg(js_entry)
                 .spawn()?;
-            
+
             child.wait()?;
         } else {
             println!("🟨 Using Node.js runtime...");
-            let mut child = std::process::Command::new("node")
-                .arg(js_entry)
-                .spawn()?;
-            
+            let mut child = std::process::Command::new("node").arg(js_entry).spawn()?;
+
             child.wait()?;
         }
-        
+
         Ok(())
     }
 }
@@ -770,28 +811,25 @@ impl CliCommand for TestCommand {
     }
 
     fn build_clap_command(&self) -> clap::Command {
-        clap::Command::new("test")
-            .about("Run tests")
+        clap::Command::new("test").about("Run tests")
     }
 
     fn execute(&self, _context: &mut CliContext, _matches: &ArgMatches) -> CliResult<()> {
         println!("🧪 Running tests...");
-        
+
         // Check if we're in a JavaScript project
         if std::path::Path::new("package.json").exists() {
             println!("🟨 Running JavaScript tests...");
-            
+
             // Try npm.cmd on Windows first, then npm
             let npm_cmd = if cfg!(target_os = "windows") {
                 "npm.cmd"
             } else {
                 "npm"
             };
-            
-            let npm_output = std::process::Command::new(npm_cmd)
-                .arg("test")
-                .output()?;
-            
+
+            let npm_output = std::process::Command::new(npm_cmd).arg("test").output()?;
+
             if !npm_output.status.success() {
                 println!("⚠️  No test script found in package.json");
                 println!("💡 Add a test script to package.json or run tests manually");
@@ -799,14 +837,12 @@ impl CliCommand for TestCommand {
                 println!("✅ JavaScript tests completed!");
             }
         }
-        
+
         // Check if we're in a Rust project
         if std::path::Path::new("Cargo.toml").exists() {
             println!("🦀 Running Rust tests...");
-            let cargo_output = std::process::Command::new("cargo")
-                .arg("test")
-                .output()?;
-            
+            let cargo_output = std::process::Command::new("cargo").arg("test").output()?;
+
             if !cargo_output.status.success() {
                 return Err(CliError::ExecutionError {
                     command: "cargo test".to_string(),
@@ -815,7 +851,7 @@ impl CliCommand for TestCommand {
             }
             println!("✅ Rust tests completed!");
         }
-        
+
         Ok(())
     }
 }
