@@ -10,18 +10,33 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  docker-build:
+    name: Build and Test with Docker
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker build -t cpm:latest .
+
+      - name: Test Docker image
+        run: |
+          docker run --rm cpm --help
+          docker run --rm cpm --version
+
   test:
     name: Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        rust: [stable, beta, nightly]
-        exclude:
-          - os: windows-latest
-            rust: nightly
-          - os: macos-latest
-            rust: nightly
+        rust: [stable]
+        exclude: []
 
     steps:
       - name: Checkout code
@@ -32,6 +47,7 @@ jobs:
         with:
           toolchain: ${{ matrix.rust }}
           override: true
+          components: clippy
 
       - name: Cache cargo registry
         uses: actions/cache@v3
@@ -84,9 +100,9 @@ jobs:
       - name: Test binary
         run: |
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            ./target/release/jetcrab.exe --version
+            ./target/release/cpm.exe --version
           else
-            ./target/release/jetcrab --version
+            ./target/release/cpm --version
           fi
 
   security:

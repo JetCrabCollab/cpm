@@ -20,6 +20,7 @@ CPM (Crab Package Manager) is a lightweight package manager that acts as an inte
 
 ### Installation
 
+#### Option 1: Cargo (Recommended)
 ```bash
 # Install CPM
 cargo install cpm
@@ -29,6 +30,19 @@ git clone https://github.com/JetCrabCollab/cpm.git
 cd cpm
 cargo build --release
 ```
+
+#### Option 2: Docker
+```bash
+# Build Docker image
+docker build -t cpm:latest .
+
+# Run CPM commands
+docker run --rm cpm:latest --help
+docker run --rm -v $(pwd):/workspace -w /workspace cpm:latest init my-project -y
+```
+
+#### Option 3: Pre-built Binaries
+Download from [Releases](https://github.com/JetCrabCollab/cpm/releases) (coming soon)
 
 ### Prerequisites
 

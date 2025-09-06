@@ -1,4 +1,4 @@
-.PHONY: help fmt clippy test build clean dev
+.PHONY: help fmt clippy test build clean dev docker-build docker-test docker-clippy
 
 help: ## Show this help message
 	@echo "CPM Development Commands:"
@@ -28,3 +28,15 @@ check: ## Run fmt check and clippy
 
 doc: ## Generate documentation
 	cargo doc --open
+
+docker-build: ## Build CPM with Docker
+	docker build -t cpm:latest .
+
+docker-test: ## Run tests with Docker
+	docker-compose up cpm-test
+
+docker-clippy: ## Run clippy with Docker
+	docker-compose up cpm-clippy
+
+docker-dev: ## Start development environment with Docker
+	docker-compose up cpm
