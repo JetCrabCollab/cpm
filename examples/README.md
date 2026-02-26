@@ -70,8 +70,6 @@ Each example includes:
 
 - `cpm init` - Initialize a new project
 - `cpm install` - Install all dependencies
-- `cpm add <package>` - Add a new package
-- `cpm remove <package>` - Remove a package
 - `cpm build` - Build the project
 - `cpm dev` - Start development server
 - `cpm test` - Run tests

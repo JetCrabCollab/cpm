@@ -16,6 +16,15 @@ struct RustStatusCommand;
 
 struct NpxCommand;
 
+struct AddCommand;
+struct RemoveCommand;
+
+struct LockCommand;
+
+struct WorkspaceCommand;
+
+struct PublishCommand;
+
 struct InstallCommand;
 struct BuildCommand;
 struct DevCommand;
@@ -48,21 +57,22 @@ impl InitCommand {
                     "test".to_string(),
                     serde_json::Value::String("cpm test".to_string()),
                 );
+                scripts_obj.insert(
+                    "preinstall".to_string(),
+                    serde_json::Value::String("echo 'preinstall' || true".to_string()),
+                );
+                scripts_obj.insert(
+                    "postinstall".to_string(),
+                    serde_json::Value::String("echo 'postinstall' || true".to_string()),
+                );
             }
         } else {
             let mut scripts = serde_json::Map::new();
-            scripts.insert(
-                "dev".to_string(),
-                serde_json::Value::String("cpm dev".to_string()),
-            );
-            scripts.insert(
-                "build".to_string(),
-                serde_json::Value::String("cpm build".to_string()),
-            );
-            scripts.insert(
-                "test".to_string(),
-                serde_json::Value::String("cpm test".to_string()),
-            );
+            scripts.insert("dev".to_string(), serde_json::Value::String("cpm dev".to_string()));
+            scripts.insert("build".to_string(), serde_json::Value::String("cpm build".to_string()));
+            scripts.insert("test".to_string(), serde_json::Value::String("cpm test".to_string()));
+            scripts.insert("preinstall".to_string(), serde_json::Value::String("echo preinstall || true".to_string()));
+            scripts.insert("postinstall".to_string(), serde_json::Value::String("echo postinstall || true".to_string()));
             package_json["scripts"] = serde_json::Value::Object(scripts);
         }
 
@@ -205,8 +215,6 @@ cpm add-rust
 ## Available Commands
 
 - `cpm install` - Install dependencies
-- `cpm add <package>` - Add a package
-- `cpm remove <package>` - Remove a package
 - `cpm build` - Build the project
 - `cpm dev` - Start development server
 - `cpm test` - Run tests
@@ -597,6 +605,133 @@ impl NpxCommand {
     }
 }
 
+impl CliCommand for AddCommand {
+    fn name(&self) -> &'static str {
+        "add"
+    }
+
+    fn build_clap_command(&self) -> clap::Command {
+        clap::Command::new("add")
+            .about("Add a package (delegates to npm install)")
+            .arg(clap::Arg::new("packages").required(true).num_args(1..))
+            .arg(clap::Arg::new("save_dev").short('D').long("save-dev").action(clap::ArgAction::SetTrue))
+    }
+
+    fn execute(&self, _context: &mut CliContext, matches: &ArgMatches) -> CliResult<()> {
+        if !std::path::Path::new("package.json").exists() {
+            return Err(CliError::FileOperationError {
+                operation: "add package".to_string(),
+                path: "package.json".to_string(),
+                message: "Not in a JavaScript project. Run 'cpm init' first.".to_string(),
+            });
+        }
+        let packages: Vec<&String> = matches.get_many::<String>("packages").unwrap_or_default().collect();
+        if packages.is_empty() {
+            eprintln!("Usage: cpm add <package> [packages...]");
+            return Ok(());
+        }
+        let save_dev = matches.get_flag("save_dev");
+        let npm_cmd = if cfg!(target_os = "windows") { "npm.cmd" } else { "npm" };
+        let mut args = vec!["install".to_string()];
+        if save_dev {
+            args.push("--save-dev".to_string());
+        }
+        args.extend(packages.iter().map(|s| (*s).clone()));
+        let status = std::process::Command::new(npm_cmd).args(&args).status()?;
+        if !status.success() {
+            return Err(CliError::ExecutionError {
+                command: format!("npm install {}", packages.join(" ")),
+                message: "npm install failed".to_string(),
+            });
+        }
+        eprintln!("Packages added successfully.");
+        Ok(())
+    }
+}
+
+impl CliCommand for LockCommand {
+    fn name(&self) -> &'static str {
+        "lock"
+    }
+
+    fn build_clap_command(&self) -> clap::Command {
+        clap::Command::new("lock")
+            .about("Update lockfiles (package-lock.json, Cargo.lock)")
+    }
+
+    fn execute(&self, _context: &mut CliContext, _matches: &ArgMatches) -> CliResult<()> {
+        eprintln!("Updating lockfiles...");
+        if std::path::Path::new("package.json").exists() {
+            let npm_cmd = if cfg!(target_os = "windows") { "npm.cmd" } else { "npm" };
+            let status = std::process::Command::new(npm_cmd)
+                .args(["install", "--package-lock-only"])
+                .status()?;
+            if status.success() {
+                eprintln!("package-lock.json updated.");
+            } else {
+                return Err(CliError::ExecutionError {
+                    command: "npm install --package-lock-only".to_string(),
+                    message: "Failed to update package-lock.json".to_string(),
+                });
+            }
+        }
+        if std::path::Path::new("Cargo.toml").exists() {
+            let status = std::process::Command::new("cargo").arg("update").status()?;
+            if status.success() {
+                eprintln!("Cargo.lock updated.");
+            } else {
+                return Err(CliError::ExecutionError {
+                    command: "cargo update".to_string(),
+                    message: "Failed to update Cargo.lock".to_string(),
+                });
+            }
+        }
+        if !std::path::Path::new("package.json").exists() && !std::path::Path::new("Cargo.toml").exists() {
+            eprintln!("No project found. Run 'cpm init' first.");
+        }
+        Ok(())
+    }
+}
+
+impl CliCommand for RemoveCommand {
+    fn name(&self) -> &'static str {
+        "remove"
+    }
+
+    fn build_clap_command(&self) -> clap::Command {
+        clap::Command::new("remove")
+            .about("Remove a package (delegates to npm uninstall)")
+            .arg(clap::Arg::new("packages").required(true).num_args(1..))
+    }
+
+    fn execute(&self, _context: &mut CliContext, matches: &ArgMatches) -> CliResult<()> {
+        if !std::path::Path::new("package.json").exists() {
+            return Err(CliError::FileOperationError {
+                operation: "remove package".to_string(),
+                path: "package.json".to_string(),
+                message: "Not in a JavaScript project. Run 'cpm init' first.".to_string(),
+            });
+        }
+        let packages: Vec<&String> = matches.get_many::<String>("packages").unwrap_or_default().collect();
+        if packages.is_empty() {
+            eprintln!("Usage: cpm remove <package> [packages...]");
+            return Ok(());
+        }
+        let npm_cmd = if cfg!(target_os = "windows") { "npm.cmd" } else { "npm" };
+        let mut args = vec!["uninstall".to_string()];
+        args.extend(packages.iter().map(|s| (*s).clone()));
+        let status = std::process::Command::new(npm_cmd).args(&args).status()?;
+        if !status.success() {
+            return Err(CliError::ExecutionError {
+                command: format!("npm uninstall {}", packages.join(" ")),
+                message: "npm uninstall failed".to_string(),
+            });
+        }
+        eprintln!("Packages removed successfully.");
+        Ok(())
+    }
+}
+
 impl CliCommand for NpxCommand {
     fn name(&self) -> &'static str {
         "npx"
@@ -652,13 +787,94 @@ impl CliCommand for NpxCommand {
     }
 }
 
+impl CliCommand for PublishCommand {
+    fn name(&self) -> &'static str {
+        "publish"
+    }
+
+    fn build_clap_command(&self) -> clap::Command {
+        clap::Command::new("publish")
+            .about("Publish package to registry (delegates to npm publish)")
+    }
+
+    fn execute(&self, _context: &mut CliContext, _matches: &ArgMatches) -> CliResult<()> {
+        if !std::path::Path::new("package.json").exists() {
+            return Err(CliError::FileOperationError {
+                operation: "publish".to_string(),
+                path: "package.json".to_string(),
+                message: "Not in a project. Run 'cpm init' first.".to_string(),
+            });
+        }
+        let npm_cmd = if cfg!(target_os = "windows") { "npm.cmd" } else { "npm" };
+        let status = std::process::Command::new(npm_cmd)
+            .arg("publish")
+            .status()?;
+        if !status.success() {
+            return Err(CliError::ExecutionError {
+                command: "npm publish".to_string(),
+                message: "Publish failed".to_string(),
+            });
+        }
+        eprintln!("Package published successfully.");
+        Ok(())
+    }
+}
+
+impl CliCommand for WorkspaceCommand {
+    fn name(&self) -> &'static str {
+        "workspace"
+    }
+
+    fn build_clap_command(&self) -> clap::Command {
+        clap::Command::new("workspace")
+            .about("List workspace packages (npm workspaces)")
+            .arg(clap::Arg::new("ls").short('l').long("ls").action(clap::ArgAction::SetTrue))
+    }
+
+    fn execute(&self, _context: &mut CliContext, _matches: &ArgMatches) -> CliResult<()> {
+        if !std::path::Path::new("package.json").exists() {
+            return Err(CliError::FileOperationError {
+                operation: "read package.json".to_string(),
+                path: "package.json".to_string(),
+                message: "Not in a project. Run 'cpm init' first.".to_string(),
+            });
+        }
+        let content = std::fs::read_to_string("package.json")?;
+        let pkg: serde_json::Value = serde_json::from_str(&content)?;
+        let workspaces = pkg.get("workspaces");
+        match workspaces {
+            Some(serde_json::Value::Array(arr)) => {
+                eprintln!("Workspace packages:");
+                for w in arr {
+                    if let Some(s) = w.as_str() {
+                        eprintln!("  - {}", s);
+                    }
+                }
+            }
+            Some(serde_json::Value::Object(obj)) => {
+                if let Some(arr) = obj.get("packages").and_then(|v| v.as_array()) {
+                    eprintln!("Workspace packages:");
+                    for w in arr {
+                        if let Some(s) = w.as_str() {
+                            eprintln!("  - {}", s);
+                        }
+                    }
+                }
+            }
+            _ => eprintln!("No workspaces configured. Add \"workspaces\": [\"packages/*\"] to package.json."),
+        }
+        Ok(())
+    }
+}
+
 impl CliCommand for InstallCommand {
     fn name(&self) -> &'static str {
         "install"
     }
 
     fn build_clap_command(&self) -> clap::Command {
-        clap::Command::new("install").about("Install dependencies")
+        clap::Command::new("install")
+            .about("Install dependencies (supports npm workspaces)")
     }
 
     fn execute(&self, _context: &mut CliContext, _matches: &ArgMatches) -> CliResult<()> {
@@ -676,7 +892,7 @@ impl CliCommand for InstallCommand {
             };
 
             let npm_output = std::process::Command::new(npm_cmd)
-                .arg("install")
+                .args(["install"])
                 .output()?;
 
             if !npm_output.status.success() {
@@ -860,13 +1076,15 @@ impl CliCommand for DevCommand {
     }
 
     fn build_clap_command(&self) -> clap::Command {
-        clap::Command::new("dev").about("Start development server")
+        clap::Command::new("dev")
+            .about("Start development server")
+            .arg(clap::Arg::new("watch").short('w').long("watch").help("Watch for changes and reload").action(clap::ArgAction::SetTrue))
     }
 
-    fn execute(&self, _context: &mut CliContext, _matches: &ArgMatches) -> CliResult<()> {
+    fn execute(&self, _context: &mut CliContext, matches: &ArgMatches) -> CliResult<()> {
+        let watch = matches.get_flag("watch");
         eprintln!("🚀 Starting development server...");
 
-        // Check for JavaScript entry point
         let js_entry = if std::path::Path::new("js/index.js").exists() {
             "js/index.js"
         } else if std::path::Path::new("index.js").exists() {
@@ -883,7 +1101,33 @@ impl CliCommand for DevCommand {
 
         eprintln!("🔍 Looking for JavaScript runtime...");
 
-        // Try JetCrab first, then fallback to Node.js
+        if watch {
+            let npm_cmd = if cfg!(target_os = "windows") { "npm.cmd" } else { "npm" };
+            let nodemon_ok = std::process::Command::new(npm_cmd)
+                .args(["exec", "nodemon", "--version"])
+                .output()
+                .map(|o| o.status.success())
+                .unwrap_or(false);
+            if nodemon_ok {
+                eprintln!("Watching with nodemon...");
+                let runner = if std::process::Command::new("jetcrab").arg("--version").output().is_ok() {
+                    "jetcrab run"
+                } else {
+                    "node"
+                };
+                let status = std::process::Command::new(npm_cmd)
+                    .args(["exec", "nodemon", "--exec", runner, js_entry])
+                    .status()?;
+                if !status.success() {
+                    return Err(CliError::ExecutionError {
+                        command: "nodemon".to_string(),
+                        message: "nodemon failed".to_string(),
+                    });
+                }
+                return Ok(());
+            }
+        }
+
         let jetcrab_available = std::process::Command::new("jetcrab")
             .arg("--version")
             .output()
@@ -1051,6 +1295,11 @@ fn main() {
         .add_command(Box::new(RemoveRustCommand::new()))
         .add_command(Box::new(RustStatusCommand))
         .add_command(Box::new(NpxCommand::new()))
+        .add_command(Box::new(AddCommand))
+        .add_command(Box::new(RemoveCommand))
+        .add_command(Box::new(LockCommand))
+        .add_command(Box::new(WorkspaceCommand))
+        .add_command(Box::new(PublishCommand))
         .add_command(Box::new(InstallCommand))
         .add_command(Box::new(BuildCommand))
         .add_command(Box::new(DevCommand))

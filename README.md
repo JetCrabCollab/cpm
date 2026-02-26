@@ -1,20 +1,26 @@
 # CPM - Crab Package Manager
-  
-  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-1.70+-orange.svg)](https://www.rust-lang.org)
 [![Node.js](https://img.shields.io/badge/node.js-18+-green.svg)](https://nodejs.org)
 
-> A simple and intelligent wrapper for npm and cargo
+> The package manager for JetCrab - npm/yarn equivalent for the JetCrab ecosystem
 
-CPM (Crab Package Manager) is a lightweight package manager that acts as an intelligent wrapper around npm and cargo, providing a unified interface for JavaScript and Rust projects.
+CPM (Crab Package Manager) is the package manager for JetCrab projects. Like npm and yarn for Node.js, CPM manages dependencies, scripts, and project lifecycle for JavaScript and Rust projects in the JetCrab stack.
 
-## 🦀 **Why CPM?**
+## Why CPM?
 
-- **Simple**: No complex registries or cache management
-- **Fast**: Delegates to proven tools (npm, cargo)
-- **Unified**: Single interface for JS and Rust projects
-- **Flexible**: Add Rust to JS projects when needed
-- **Lightweight**: Minimal dependencies and overhead
+CPM aims for **parity with npm/yarn** for the JetCrab ecosystem:
+
+| npm/yarn | CPM |
+|----------|-----|
+| npm init | cpm init |
+| npm install | cpm install |
+| npm install pkg | cpm add pkg |
+| npm run script | cpm run script |
+| yarn add / remove | cpm add / remove |
+
+Plus: native Rust/WASM support via Cargo integration.
 
 ## 🚀 **Quick Start**
 
@@ -77,11 +83,40 @@ Initialize a new JavaScript project with npm.
 cpm init my-app -y
 ```
 
+### `cpm add <package> [-D]`
+Add a package (delegates to npm install). Use `-D` for devDependencies.
+
+```bash
+cpm add lodash
+cpm add -D eslint
+```
+
+### `cpm remove <package>`
+Remove a package (delegates to npm uninstall).
+
+```bash
+cpm remove lodash
+```
+
 ### `cpm install`
 Install dependencies for the current project (npm + cargo).
 
 ```bash
 cpm install
+```
+
+### `cpm lock`
+Update lockfiles (package-lock.json, Cargo.lock).
+
+```bash
+cpm lock
+```
+
+### `cpm workspace`
+List workspace packages.
+
+```bash
+cpm workspace
 ```
 
 ### `cpm build`
@@ -91,11 +126,12 @@ Build the project (cargo + wasm-pack if available).
 cpm build
 ```
 
-### `cpm dev`
-Start development server (JetCrab first, then Node.js).
+### `cpm dev [-w|--watch]`
+Start development server (JetCrab first, then Node.js). Use `--watch` for hot reload with nodemon.
 
 ```bash
 cpm dev
+cpm dev --watch
 ```
 
 ### `cpm test`
@@ -132,6 +168,13 @@ Check Rust status in the current project.
 
 ```bash
 cpm rust-status
+```
+
+### `cpm publish`
+Publish package to npm registry (delegates to npm publish).
+
+```bash
+cpm publish
 ```
 
 ## 🏗️ **Project Structure**
@@ -174,7 +217,8 @@ CPM is designed to be simple and lightweight:
 ```bash
 cpm init my-js-app -y
 cd my-js-app
-cpm install express  # Install dependencies
+cpm add lodash      # Add dependencies
+cpm install         # Install all dependencies
 cpm dev             # Runs with jetcrab or node
 cpm test            # Run tests
 cpm build           # Build project
