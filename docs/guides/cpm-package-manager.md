@@ -192,7 +192,7 @@ Packages that combine JavaScript and Rust:
 # Registry management not yet implemented
 
 # Install from custom registry
-claw install @my-registry/package
+cpm install @my-registry/package
 ```
 
 ### Workspace Support
@@ -210,29 +210,29 @@ claw install @my-registry/package
 ### 1. Project Setup
 ```bash
 # Initialize project
-claw init my-project
+cpm init my-project
 cd my-project
 
 # Install dependencies
-claw install react serde
+cpm install react serde
 ```
 
 ### 2. Development
 ```bash
 # Start development server
-claw dev
+cpm dev
 
 # In another terminal, run tests
-claw test
+cpm test
 
 # Lint code
-claw lint
+cpm lint
 ```
 
 ### 3. Building
 ```bash
 # Create production bundle
-claw bundle
+cpm bundle
 
 # Build optimized version
 cargo build --release
@@ -273,8 +273,8 @@ cargo build --release
 #### Package Installation Fails
 ```bash
 # Clear cache and retry
-claw cache clear
-claw install [package]
+cpm cache clear
+cpm install [package]
 ```
 
 #### WebAssembly Compilation Errors
@@ -298,10 +298,10 @@ cargo install wasm-pack --force
 ### Debug Mode
 ```bash
 # Enable verbose logging
-claw --verbose install [package]
+cpm --verbose install [package]
 
 # Debug specific command
-RUST_LOG=debug claw install react
+RUST_LOG=debug cpm install react
 ```
 
 ## Best Practices
@@ -314,7 +314,7 @@ my-project/
 │   └── lib.rs           # Rust library (optional)
 ├── tests/
 │   └── test.js          # Test files
-├── claw.json            # Package configuration
+├── package.json            # Package configuration
 └── README.md            # Project documentation
 ```
 
@@ -348,10 +348,10 @@ console.log(add(2, 3));
 ### Development Integration
 ```bash
 # Claw validates JetCrab installation
-claw install react  # Automatically checks JetCrab
+cpm install react  # Automatically checks JetCrab
 
 # Skip validation if needed
-claw --skip-jetcrab-check install react
+cpm --skip-jetcrab-check install react
 ```
 
 ## Examples
@@ -359,27 +359,27 @@ claw --skip-jetcrab-check install react
 ### Basic JavaScript Project
 ```bash
 # Initialize project
-claw init js-project
+cpm init js-project
 cd js-project
 
 # Install dependencies
-claw install lodash axios
+cpm install lodash axios
 
 # Create main file
 echo "import _ from 'lodash'; console.log(_.chunk([1,2,3,4], 2));" > src/index.js
 
 # Run project
-claw run start
+cpm run start
 ```
 
 ### Hybrid JavaScript + Rust Project
 ```bash
 # Initialize project
-claw init hybrid-project
+cpm init hybrid-project
 cd hybrid-project
 
 # Install both JS and Rust dependencies
-claw install react serde
+cpm install react serde
 
 # Create Rust library
 echo 'use serde::{Serialize, Deserialize}; #[derive(Serialize, Deserialize)] pub struct User { pub name: String, pub age: u32 }' > src/lib.rs
@@ -388,7 +388,7 @@ echo 'use serde::{Serialize, Deserialize}; #[derive(Serialize, Deserialize)] pub
 echo "import { User } from './pkg/hybrid_project.js'; const user = new User('Alice', 30); console.log(user);" > src/index.js
 
 # Run project
-claw run start
+cpm run start
 ```
 
 ## Resources

@@ -20,6 +20,8 @@ struct InstallCommand;
 struct BuildCommand;
 struct DevCommand;
 struct TestCommand;
+struct RunCommand;
+
 
 impl InitCommand {
     fn new() -> Self {
@@ -748,12 +750,109 @@ impl CliCommand for BuildCommand {
 
             eprintln!("✅ Rust project built!");
         } else {
-            eprintln!("📦 No build step needed for JavaScript-only project");
+            // It's a JavaScript project
+            eprintln!("📦 JavaScript project detected.");
+            eprintln!("🦀 Bundling with JetCrab Runtime...");
+
+            let mut entry_file = "index.js";
+            if std::path::Path::new("js/index.js").exists() {
+                entry_file = "js/index.js";
+            }
+            
+            // Get project name from package.json
+            let mut output_name = "app.exe".to_string();
+            if let Ok(content) = std::fs::read_to_string("package.json") {
+                if let Ok(json) = serde_json::from_str::<serde_json::Value>(&content) {
+                    if let Some(name) = json["name"].as_str() {
+                        output_name = if cfg!(windows) {
+                            format!("{}.exe", name)
+                        } else {
+                            name.to_string()
+                        };
+                    }
+                }
+            }
+
+            eprintln!("🔨 Bundling '{}' into '{}'...", entry_file, output_name);
+
+            // Bundling Logic (Native)
+            let build_dir = std::path::Path::new("jetcrab_build");
+            if build_dir.exists() {
+                std::fs::remove_dir_all(build_dir)?;
+            }
+            std::fs::create_dir_all(build_dir.join("src"))?;
+
+            // Copy entry file
+            std::fs::copy(entry_file, build_dir.join("app.js"))?;
+
+            // Write templates
+            // We need to determine the path to JetCrab library
+            // For development, we assume it's a sibling. For release, we might want to use git or registry.
+            // Here we prioritize JETCRAB_PATH env var, then sibling directory.
+            let current_dir = std::env::current_dir()?;
+            let jetcrab_path = std::env::var("JETCRAB_PATH")
+                .map(std::path::PathBuf::from)
+                .unwrap_or_else(|_| {
+                    // Try to find JetCrab relative to cpm executable or current dir?
+                    // Assuming we are in a workspace:
+                    // ../JetCrab
+                    current_dir.join("../JetCrab").canonicalize().unwrap_or(current_dir.join("../JetCrab"))
+                });
+            
+            let jetcrab_path_str = jetcrab_path.display().to_string().replace("\\", "/");
+
+            std::fs::write(
+                build_dir.join("src/main.rs"), 
+                cpm::templates::STANDALONE_TEMPLATE
+            )?;
+
+            let cargo_toml = cpm::templates::CARGO_TOML_TEMPLATE
+                .replace("standalone-app", output_name.trim_end_matches(".exe"))
+                .replace("JETCRAB_PATH", &jetcrab_path_str);
+
+            std::fs::write(build_dir.join("Cargo.toml"), cargo_toml)?;
+
+            // Run cargo build
+            let status = std::process::Command::new("cargo")
+                .arg("build")
+                .arg("--release")
+                .current_dir(build_dir)
+                .status()?;
+
+            if !status.success() {
+                 return Err(CliError::ExecutionError {
+                     command: "cargo build (bundling)".to_string(),
+                     message: "Bundling failed".to_string(),
+                 });
+            }
+
+            // Move binary
+            let binary_name = if cfg!(windows) {
+                format!("{}.exe", output_name.trim_end_matches(".exe"))
+            } else {
+                output_name.to_string()
+            };
+
+            let target_path = build_dir.join("target/release").join(&binary_name);
+            if target_path.exists() {
+                std::fs::copy(&target_path, &binary_name)?;
+                eprintln!("✨ Success! Standalone binary created: {}", binary_name);
+            } else {
+                return Err(CliError::InternalError {
+                    message: "Binary not found after build".into(),
+                });
+            }
+            
+            // Clean up
+            // std::fs::remove_dir_all(build_dir)?; // Keep for debugging for now or if user wants to see it
+            
+
         }
 
         Ok(())
     }
 }
+
 
 impl CliCommand for DevCommand {
     fn name(&self) -> &'static str {
@@ -809,6 +908,90 @@ impl CliCommand for DevCommand {
     }
 }
 
+impl CliCommand for RunCommand {
+    fn name(&self) -> &'static str {
+        "run"
+    }
+
+    fn build_clap_command(&self) -> clap::Command {
+        clap::Command::new("run")
+            .about("Run a script or file")
+            .arg(
+                clap::Arg::new("script")
+                    .help("Script name or file path")
+                    .required(true)
+                    .index(1),
+            )
+            .arg(
+                clap::Arg::new("args")
+                    .help("Arguments to pass to the script")
+                    .num_args(0..)
+                    .last(true),
+            )
+    }
+
+    fn execute(&self, _context: &mut CliContext, matches: &ArgMatches) -> CliResult<()> {
+        let script = matches.get_one::<String>("script").unwrap();
+        let args: Vec<&String> = matches
+            .get_many::<String>("args")
+            .unwrap_or_default()
+            .collect();
+
+        eprintln!("🚀 Running: {}", script);
+
+        // 1. Try to run as a package.json script via npm
+        if std::path::Path::new("package.json").exists() {
+             if let Ok(content) = std::fs::read_to_string("package.json") {
+                 if let Ok(package_json) = serde_json::from_str::<serde_json::Value>(&content) {
+                     if let Some(scripts) = package_json.get("scripts").and_then(|s| s.as_object()) {
+                         if scripts.contains_key(script) {
+                             eprintln!("📜 Found npm script '{}'", script);
+                             
+                             let npm_cmd = if cfg!(target_os = "windows") { "npm.cmd" } else { "npm" };
+                             let mut cmd = std::process::Command::new(npm_cmd);
+                             cmd.arg("run").arg(script);
+                             if !args.is_empty() {
+                                 cmd.arg("--").args(args);
+                             }
+                             
+                             let status = cmd.status()?;
+                             if !status.success() {
+                                 return Err(CliError::ExecutionError {
+                                     command: format!("npm run {}", script),
+                                     message: "Script failed".to_string(),
+                                 });
+                             }
+                             return Ok(());
+                         }
+                     }
+                 }
+             }
+        }
+
+        // 2. Try to run as a JS file with JetCrab
+        let script_path = std::path::Path::new(script);
+        if script_path.exists() && (script.ends_with(".js") || script.ends_with(".rs")) {
+             eprintln!("🦀 Executing file with JetCrab...");
+             let mut cmd = std::process::Command::new("jetcrab");
+             cmd.arg("run").arg(script);
+             cmd.args(args);
+             
+             let status = cmd.status()?;
+             if !status.success() {
+                 return Err(CliError::ExecutionError {
+                     command: format!("jetcrab run {}", script),
+                     message: "Execution failed".to_string(),
+                 });
+             }
+             return Ok(());
+        }
+        
+        eprintln!("❌ Could not find script or file: {}", script);
+        Ok(())
+    }
+}
+
+
 impl CliCommand for TestCommand {
     fn name(&self) -> &'static str {
         "test"
@@ -861,7 +1044,7 @@ impl CliCommand for TestCommand {
 }
 
 fn main() {
-    let app = CliApp::new("cpm", "0.1.0")
+    let app = CliApp::new("cpm", env!("CARGO_PKG_VERSION"))
         .description("A modern package manager for JavaScript and Rust")
         .add_command(Box::new(InitCommand::new()))
         .add_command(Box::new(AddRustCommand::new()))
@@ -871,7 +1054,8 @@ fn main() {
         .add_command(Box::new(InstallCommand))
         .add_command(Box::new(BuildCommand))
         .add_command(Box::new(DevCommand))
-        .add_command(Box::new(TestCommand));
+        .add_command(Box::new(TestCommand))
+        .add_command(Box::new(RunCommand));
 
     if should_trigger_easter_egg() {
         show_walking_claw();

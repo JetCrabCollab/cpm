@@ -4,7 +4,9 @@
 //! providing a unified interface for JavaScript and Rust projects.
 
 pub mod cli;
+pub mod templates;
 pub mod easter_egg;
+
 
 // Re-export commonly used types
 pub use cli::framework::{CliApp, CliCommand, CliContext, CliError, CliResult};
